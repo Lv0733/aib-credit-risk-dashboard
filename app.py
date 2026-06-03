@@ -1,15 +1,4 @@
-"""
-AIB Group Credit Risk Dashboard — app.py
-=========================================
-IMPORTANT: All data is loaded LIVE from your Excel file.
-If you change any number in the Excel, just re-run this app and
-the dashboard will reflect it automatically.
-
-Run:   streamlit run app.py
-Needs: MAIN_Expected_Loss_model_.xlsx in the same folder as app.py
-
-Install:  pip install streamlit plotly pandas openpyxl numpy
-"""
+"""AIB Group Credit Risk Dashboard"""
 
 from plotly import data
 import streamlit as st
@@ -27,16 +16,12 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# ── Colours ───────────────────────────────────────────────────────────────────
+# Colours 
 NAVY  = "#003366"; BLUE  = "#1F4E79"; LBLUE = "#BDD7EE"
 GREEN = "#1F7A4D"; AMBER = "#C07010"; RED   = "#C00000"
 GRAY  = "#F2F2F2"
 
-# ══════════════════════════════════════════════════════════════════════════════
-#  DATA LOADING — reads directly from your Excel
-#  Every function below maps to exact sheet + row numbers in the workbook.
-#  If you rename a sheet or move rows, update the row references here.
-# ══════════════════════════════════════════════════════════════════════════════
+
 
 EXCEL_FILE = "Credit_Risk_Model.xlsx"
 
@@ -64,7 +49,7 @@ def load_all_data(filepath):
     data["years"] = YEARS
     data["segs"]  = SEGS
 
-    # ── Sheet: Raw Data ───────────────────────────────────────────────────────
+    # ── Sheet: Raw Data ──────────────────
     ws = wb["Raw Data"]
 
     # A. Loan Book — rows 6-10, cols B(2)-G(7)  [col B=2020 … col G=2025]
@@ -172,13 +157,12 @@ def load_all_data(filepath):
     data["residuals"]  = [ws.cell(r, 5).value for r in range(15, 21)]   # col E
 
     # Forward forecast — rows 25-29
-    data["fc_unemp"]  = [ws.cell(25, c).value for c in range(3, 6)]     # Base/Adv/Sev
+    data["fc_unemp"]  = [ws.cell(25, c).value for c in range(3, 6)]    
     data["fc_gdp"]    = [ws.cell(26, c).value for c in range(3, 6)]
     data["fc_ecb"]    = [ws.cell(27, c).value for c in range(3, 6)]
     data["fc_hpi"]    = [ws.cell(28, c).value for c in range(3, 6)]
-    data["fc_npl"]    = [ws.cell(29, c).value for c in range(3, 6)]     # FORECAST NPL
-
-    # ── Sheet: Stress Testing ─────────────────────────────────────────────────
+    data["fc_npl"]    = [ws.cell(29, c).value for c in range(3, 6)]    
+    # ── Sheet: Stress Testing 
     ws = wb["Stress Testing"]
 
     # Multipliers — rows 4-8, cols C-F (Base, DS1, DS2, Upside)
@@ -249,7 +233,7 @@ def load_all_data(filepath):
     data["roe"]       = ws_m.cell(23, 3).value    # RoTE
     data["profit_at"] = ws_m.cell(18, 3).value    # Profit after tax 2025
 
-    # ── Sheet: PSI Analysis ───────────────────────────────────────────────────
+    # Sheet: PSI Analysis
     ws = wb["PSI Analysis"]
 
     # Stage PSI — rows 5-9
@@ -265,7 +249,7 @@ def load_all_data(filepath):
     data["psi_segs"]        = psi_segs
     data["psi_seg_total"]   = [ws.cell(19, c).value for c in range(3, 9)]  # row 19
 
-    # ── Sheet: Macro Forecast (ECL scenario table) ────────────────────────────
+    # Sheet: Macro Forecast (ECL scenario table) 
     ws = wb["Macro Forcast(5y)"]
 
     # ECL scenario table — rows 6-10, cols P-T (Reported, Base, DS1, DS2, Upside)
@@ -325,7 +309,8 @@ def clean_number(x):
             return 0
 
     return float(x)
-# ── Load the data ─────────────────────────────────────────────────────────────
+
+# Load the data 
 EXCEL_PATH = EXCEL_FILE
 if not os.path.exists(EXCEL_PATH):
     EXCEL_PATH = os.path.join(os.path.dirname(__file__), EXCEL_FILE)
@@ -346,9 +331,9 @@ for seg in SEGS:
 SEG_COLOURS = [NAVY, "#2E75B6", "#5BA3DC", "#70AD47", "#ED7D31"]
 
 
-# ══════════════════════════════════════════════════════════════════════════════
+
 #  SIDEBAR
-# ══════════════════════════════════════════════════════════════════════════════
+
 
 with st.sidebar:
     st.markdown("## 🏦 AIB Credit Risk")
@@ -358,23 +343,7 @@ with st.sidebar:
         st.cache_data.clear()
         st.rerun()
     st.divider()
-    # st.markdown("### LGD Overrides (%)")
-    # st.caption("Defaults loaded from Excel — change for scenarios")
-    #lgd_user = {}
-    #for seg in SEGS:
-    #     default_lgd = d["lgd_inputs"][seg][-1] or 0.40
-    #     lgd_user[seg] = st.slider(
-    #         seg[:25], 0.05, 0.85, float(default_lgd), 0.01,
-    #         format="%.0f%%", key=f"lgd_{seg}")
-    # st.divider()
-    # st.markdown("### Forward Scenario Inputs")
-    # st.caption("Used in Stress Testing & Regression tabs")
-    # unemp_b = st.slider("Base Unemployment",  0.01, 0.20, float(d["fc_unemp"][0] or 0.044), 0.001, format="%.1f%%")
-    # unemp_a = st.slider("Adverse Unemploy't", 0.01, 0.25, float(d["fc_unemp"][1] or 0.070), 0.001, format="%.1f%%")
-    # unemp_s = st.slider("Severe Unemploy't",  0.01, 0.30, float(d["fc_unemp"][2] or 0.100), 0.001, format="%.1f%%")
-    # gdp_b   = st.slider("Base GDP",   -0.10, 0.15,  float(d["fc_gdp"][0] or 0.030), 0.005, format="%.1f%%")
-    # gdp_a   = st.slider("Adverse GDP",-0.10, 0.10,  float(d["fc_gdp"][1] or -0.010),0.005, format="%.1f%%")
-    # gdp_s   = st.slider("Severe GDP", -0.15, 0.05,  float(d["fc_gdp"][2] or -0.035),0.005, format="%.1f%%")
+   
     st.markdown("## 📌 Model Assumptions")
 
     st.info("""
@@ -405,9 +374,8 @@ with st.sidebar:
     """)
 
 
-# ══════════════════════════════════════════════════════════════════════════════
+
 #  HEADER
-# ══════════════════════════════════════════════════════════════════════════════
 def clean_percent(x):
 
     # Handle None
@@ -475,9 +443,9 @@ with c6: st.metric("Cost of Risk 2025",f"{cor_25:.1f} bps")
 st.divider()
 
 
-# ══════════════════════════════════════════════════════════════════════════════
+
 #  TABS
-# ══════════════════════════════════════════════════════════════════════════════
+
 
 tab1,tab2,tab3,tab4,tab5,tab6 = st.tabs([
     "📊 Loan Book & Credit Quality",
@@ -489,7 +457,7 @@ tab1,tab2,tab3,tab4,tab5,tab6 = st.tabs([
 ])
 
 
-# ── TAB 1: LOAN BOOK ──────────────────────────────────────────────────────────
+#  TAB 1: LOAN BOOK
 with tab1:
     st.subheader("Loan Book & Credit Quality  2020–2025")
     st.caption("All data loaded from: Raw Data sheet → Sections A, B, C, D, E")
@@ -506,6 +474,8 @@ with tab1:
                           height=400, template="plotly_white",
                           legend=dict(orientation="h", y=-0.3))
         st.plotly_chart(fig, use_container_width=True)
+        st.success("""**Key Insight:** AIB's loan book expanded steadily from 2020 to 2025, driven primarily by Residential Mortgages and SME lending. The portfolio remains diversified across retail and commercial segments, reducing concentration risk.
+                    """)
 
     with cb:
         fig = go.Figure()
@@ -527,13 +497,14 @@ with tab1:
                           height=400, template="plotly_white",
                           legend=dict(orientation="h", y=-0.3))
         st.plotly_chart(fig, use_container_width=True)
+        st.success("""**Key Insight:** Group NPL declined significantly between 2020 and 2025, reflecting improving borrower quality and effective risk management. Property & Construction experienced the strongest recovery.
+                """)
 
     cc, cd = st.columns(2)
     with cc:
         fig = go.Figure()
         fig.add_trace(go.Bar(x=YEARS, y=[v or 0 for v in d["cor_bps"]],
-                              #marker_color=[RED if (v or 0) > 50 else AMBER if (v or 0) > 10 else GREEN for v in d["cor_bps"]],
-                              marker_color=[RED if clean_number(v) > 50
+                                       marker_color=[RED if clean_number(v) > 50
                                        else AMBER if clean_number(v) > 10
                                        else GREEN for v in d["cor_bps"]],
                               text=[f"{clean_number(v):.1f}" for v in d["cor_bps"]],
@@ -544,6 +515,8 @@ with tab1:
         fig.add_annotation(x=2020, y=-200, text="COVID-19 provision surge",
                             showarrow=True, arrowhead=2, ax=40, ay=-40, font=dict(size=11, color="black"))
         st.plotly_chart(fig, use_container_width=True)
+        st.success("""**Key Insight:** Cost of Risk spiked during COVID-19 due to precautionary provisioning but returned to normal levels by 2025, indicating improved portfolio stability and lower credit stress.
+                    """)
 
     with cd:
         fig = go.Figure()
@@ -556,6 +529,8 @@ with tab1:
                           height=320, template="plotly_white",
                           legend=dict(orientation="h", y=-0.3), yaxis_tickformat=".0%")
         st.plotly_chart(fig, use_container_width=True)
+        st.success("""**Key Insight:** Coverage ratios remained robust across the portfolio, indicating prudent provisioning practices and sufficient protection against future credit losses.
+            """)
 
     # Data table
     loan_df = pd.DataFrame(d["loan_book"], index=YEARS).T
@@ -570,10 +545,10 @@ with tab1:
     ),
     use_container_width=True
 )
-    #st.dataframe(loan_df.style.format("{:,.0f}"), use_container_width=True)
+   
 
 
-# ── TAB 2: EL MODEL ───────────────────────────────────────────────────────────
+# TAB 2: EL MODEL 
 with tab2:
     st.subheader("Expected Loss Model  (EL = PD × LGD × EAD)  2020–2025")
     st.info("PD from EL Loss model rows 6-10 | LGD from rows 15-19 (sidebar overrides LGD) | "
@@ -598,6 +573,8 @@ with tab2:
                           height=400, template="plotly_white",
                           legend=dict(orientation="h", y=-0.3))
         st.plotly_chart(fig, use_container_width=True)
+        st.success("""**Key Insight:** Expected Loss is concentrated in Residential Mortgages due to portfolio size, while corporate exposures contribute disproportionately because of higher risk characteristics.
+            """)
 
     with cb:
         fig = go.Figure()
@@ -614,9 +591,11 @@ with tab2:
                           height=400, template="plotly_white",
                           legend=dict(orientation="h", y=-0.3))
         st.plotly_chart(fig, use_container_width=True)
+        st.success("""**Key Insight:** Model Expected Loss broadly aligns with reported ECL provisions, providing evidence that the PD-LGD-EAD framework reasonably captures portfolio risk.
+   """)
 
     st.subheader("PD Inputs  (from EL Loss model sheet — rows 6-10)")
-    #pd_df = pd.DataFrame(d["pd_inputs"], index=YEARS).T.applymap(lambda x: f"{x:.2%}" if x else "—")
+    
     pd_df_raw = pd.DataFrame(d["pd_inputs"], index=YEARS).T
 
     pd_df = pd_df_raw.map(lambda x: (f"{clean_percent(x):.2%}"
@@ -626,7 +605,7 @@ with tab2:
     st.dataframe(pd_df, use_container_width=True)
 
     st.subheader("LGD Inputs  (from EL Loss model sheet — rows 15-19)")
-    #lgd_df = pd.DataFrame(d["lgd_inputs"], index=YEARS).T.applymap(lambda x: f"{x:.2%}" if x else "—")
+    
     lgd_df_raw = pd.DataFrame(d["lgd_inputs"], index=YEARS).T
 
     lgd_df = lgd_df_raw.map(lambda x: (f"{clean_percent(x):.2%}"
@@ -640,20 +619,20 @@ with tab2:
     gap_df = pd.DataFrame({
         "Year": [str(y) for y in YEARS],
         "Actual ECL Prov (€m)": [v or 0 for v in d["actual_ecl_prov"]],
-        #"Model EL (€m)": [round(v or 0, 1) for v in d["el_total"]],
+        
         "Model EL (€m)": [round(clean_number(v), 1) for v in d["el_total"]],
-        #"Gap (€m)": [round(v or 0, 1) for v in d["coverage_gap"]],
+        
         "Gap (€m)": [round(clean_number(v), 1) for v in d["coverage_gap"]],
-        #"Coverage Ratio": [f"{v:.2f}x" if v else "—" for v in d["coverage_ratio"]],
+        
         "Coverage Ratio": [f"{clean_number(v):.2f}x" if clean_number(v) != 0 else "-" for v in d["coverage_ratio"]],
-        #"Status": ["✅ Over-provisioned" if (v or 0)>0 else "⚠ Under" for v in d["coverage_gap"]],
+        
         "Status": ["✅ Over-provisioned" if clean_number(v) > 0 else "⚠️ Under" for v in d["coverage_gap"]],
     })
     st.dataframe(gap_df, hide_index=True, use_container_width=True)
 
-    # =========================================================
+   
     # IFRS9 ECL RECONCILIATION BRIDGE
-    # =========================================================
+  
 
     st.subheader("IFRS9 ECL Reconciliation Bridge")
 
@@ -693,7 +672,7 @@ with tab2:
     )
 
 
-# ── TAB 3: IFRS 9 STAGING ─────────────────────────────────────────────────────
+# TAB 3: IFRS 9 STAGING 
 with tab3:
     st.subheader("IFRS 9 Stage Analysis  2020–2025")
     st.caption("Stage balances from Raw Data rows 63-68 | ECL provisions from rows 66-68")
@@ -714,9 +693,11 @@ with tab3:
                           height=400, template="plotly_white",
                           legend=dict(orientation="h", y=-0.3))
         st.plotly_chart(fig, use_container_width=True)
+        st.success("""**Key Insight:** Stage 1 balances remain the largest component of the portfolio, demonstrating strong overall credit quality and limited migration into distressed categories.
+            """)
 
     with cb:
-        #s2_pct = [(d["stage2"][i] or 0) / t * 100 if t else 0 for i, t in enumerate(stage_tots)]
+        
         s2_pct = [(clean_number(d["stage2"][i]) / clean_number(t)) * 100 if clean_number(t) != 0 else 0 for i, t in enumerate(stage_tots)]
         fig = go.Figure()
         fig.add_trace(go.Scatter(x=YEARS, y=s2_pct, mode="lines+markers+text",
@@ -728,6 +709,8 @@ with tab3:
         fig.update_layout(title="Stage 2 as % of Total  (Early Warning KPI)",
                           height=400, template="plotly_white")
         st.plotly_chart(fig, use_container_width=True)
+        st.success("""**Key Insight:** Stage 2 balances remained within acceptable limits, indicating limited signs of significant credit deterioration across the portfolio.
+            """)
 
     cc, cd = st.columns(2)
     with cc:
@@ -768,7 +751,7 @@ with tab3:
     st.plotly_chart(fig_h, use_container_width=True)
 
 
-# ── TAB 4: MACRO REGRESSION ───────────────────────────────────────────────────
+# TAB 4: MACRO REGRESSION 
 with tab4:
     st.subheader("Macro-Linked PD Estimation  (OLS Regression)  2020–2025")
     st.caption("Regression data from Macro Regression sheet rows 5-10 | Fitted values rows 15-20 | Forecast rows 25-29")
@@ -871,7 +854,7 @@ with tab4:
     st.dataframe(macro5y_df.style.format("{:.1f}%"), use_container_width=True)
 
 
-# ── TAB 5: STRESS TESTING ─────────────────────────────────────────────────────
+# TAB 5: STRESS TESTING 
 with tab5:
     st.subheader("Stress Testing  |  4 Scenarios  |  Data from Stress Testing sheet")
     st.info("""
@@ -880,13 +863,7 @@ with tab5:
             • DS2: Trade war and FDI shock trigger severe recession risks  
             • Upside: Easing geopolitical tensions improve credit outlook
     """)
-    # st.info(
-    #     "Multipliers (rows 4-8) derived from AIB ECL scenario table (DS/Base ratios). "
-    #     "Stressed PD (rows 12-16) = Base PD × Multiplier. "
-    #     "Stressed EL (rows 21-25) = Stressed PD × LGD × EAD. "
-    #     "Capital impact uses CET1 from Macro(5y Avg) sheet."
-    # )
-
+    
     # Use Excel stressed EL directly
     scen_names_st = ["Base", "DS1", "DS2", "Upside"]
     scen_labels_st = ["Base", "Downside 1", "Downside 2", "Upside"]
@@ -918,6 +895,8 @@ with tab5:
                           xaxis_tickangle=-20, height=420, template="plotly_white",
                           legend=dict(orientation="h", y=-0.35))
         st.plotly_chart(fig, use_container_width=True)
+        st.success("""**Key Insight:** Residential Mortgages and Corporate lending exhibit the largest absolute increase in expected losses under stressed conditions,
+            making them the primary contributors to portfolio vulnerability during economic downturns.""")
 
     with cb:
         base_v = totals.get("Base") or 0
@@ -938,6 +917,8 @@ with tab5:
 
     # Capital impact table from Excel
     st.subheader("Capital Impact  |  Scenario Summary rows 30-34")
+    st.info("""Capital adequacy is assessed by comparing post-stress CET1 ratios against regulatory requirements,
+        providing a measure of the bank's ability to absorb unexpected losses.""")
     ss = d["scen_summary"]
     cap_df = pd.DataFrame({
         "Scenario": list(ss.keys()),
@@ -950,24 +931,9 @@ with tab5:
         "Headroom": [f"{ss[s]['Headroom']:.2%}" if ss[s]["Headroom"] else "—" for s in ss],
     })
     st.dataframe(cap_df, hide_index=True, use_container_width=True)
+    st.success("""**Key Insight:** Even under the severe Downside 2 scenario, the projected CET1 ratio remains above regulatory requirements,
+            indicating that the portfolio retains sufficient capital resilience under stress.""")
 
-    # CET1 post-stress visual
-    # cet1_vals = [ss[s]["CET1_Ratio_Post"] for s in ["Base","Downside 1","Downside 2","Upside"]]
-    # req = d["cet1_total_req"] or 0.1584
-    # fig_cap = go.Figure()
-    # fig_cap.add_trace(go.Bar(
-    #     x=["Base","DS1","DS2","Upside"],
-    #     y=[v*100 if v else 0 for v in cet1_vals],
-    #     marker_color=[GREEN if (v or 0)>(req) else RED for v in cet1_vals],
-    #     text=[f"{v:.2%}" if v else "—" for v in cet1_vals],
-    #     textposition="outside"))
-    # fig_cap.add_hline(y=req*100, line_dash="dash", line_color=RED,
-    #                   annotation_text=f"Total Cap Req = {req:.1%}")
-    # fig_cap.add_hline(y=(d["cet1_total_req"] or 0.1129)*100, line_dash="dot", line_color=AMBER,
-    #                   annotation_text=f"CET1 Req = {(d['cet1_total_req'] or 0.1129):.1%}")
-    # fig_cap.update_layout(title="Post-Stress CET1 Ratio vs Requirements",
-    #                        height=340, template="plotly_white")
-    # st.plotly_chart(fig_cap, use_container_width=True)
 
     # CET1 post-stress visual
     cet1_vals = [ss[s]["CET1_Ratio_Post"] for s in ["Base","Downside 1","Downside 2","Upside"]]
@@ -1006,17 +972,27 @@ with tab5:
     height=340,
     template="plotly_white"
     )
-
+    
     st.plotly_chart(fig_cap, use_container_width=True)
+    st.success("""**Key Insight:** All scenarios maintain positive capital headroom above regulatory thresholds,although severe downside conditions materially reduce the available capital buffer.
+            """)
     # Multiplier table
     st.subheader("PD Stress Multipliers  |  rows 4-8  |  Derived from AIB ECL scenario ratios")
+    st.info("""Scenario-specific PD multipliers translate macroeconomic deterioration into changes in borrower default risk. Higher multipliers indicate segments that are more vulnerable to economic shocks.
+            """)
     mult_df = pd.DataFrame(
         {seg: d["multipliers"][seg] for seg in SEGS}
     ).T
     st.dataframe(mult_df.style.format("{:.2f}x"), use_container_width=True)
+    st.success("""**Key Insight:** Residential Mortgages show the highest sensitivity under the severe downturn scenario, while SME and Corporate portfolios also experience substantial increases in default risk.
+                """)
+    st.success("""Stress Testing Conclusion : The portfolio demonstrates strong resilience across all simulated scenarios.
+        While credit losses increase significantly under severe economic stress,
+        capital ratios remain above regulatory minimum requirements, indicating
+        adequate loss-absorption capacity and effective risk management.""")
 
 
-# ── TAB 6: PSI ────────────────────────────────────────────────────────────────
+# TAB 6: PSI 
 with tab6:
     st.subheader("Population Stability Index  |  Portfolio Drift Detection  |  Baseline: 2020")
     st.caption("PSI data from PSI Analysis sheet rows 5-9 (Stage PSI) and rows 14-20 (Segment PSI)")
@@ -1042,6 +1018,8 @@ with tab6:
         fig.update_layout(title="Stage Distribution PSI vs 2020 Baseline  |  rows 5-9",
                           height=380, template="plotly_white")
         st.plotly_chart(fig, use_container_width=True)
+        st.success("""**Key Insight:** Despite post-pandemic credit migration, Stage distribution PSI remains below the 0.10 monitoring threshold, indicating that portfolio risk composition has evolved gradually rather than experiencing structural deterioration.
+                    """)
 
     with cb:
         psi_sg = d["psi_seg_total"]
@@ -1055,6 +1033,8 @@ with tab6:
         fig.update_layout(title="Segment Distribution PSI vs 2020 Baseline  |  rows 14-20",
                           height=380, template="plotly_white")
         st.plotly_chart(fig, use_container_width=True)
+        st.success("""**Key Insight:** Segment-level PSI confirms that portfolio expansion has occurred without significant concentration risk emerging in any single business line.
+                    """)
 
     # Stage shares heatmap
     s1p = [(d["psi_stage1"][i] or 0)*100 for i in range(6)]
@@ -1070,6 +1050,8 @@ with tab6:
         title="Stage Distribution % Heatmap  |  rows 5-7")
     fig_h.update_layout(height=320, template="plotly_white")
     st.plotly_chart(fig_h, use_container_width=True)
+    st.success("""**Key Insight:** The increasing dominance of Stage 1 exposures and declining Stage 3 balances indicate sustained improvement in borrower credit quality since the COVID-19 period.
+                """)
 
     # Segment PSI table
     psi_summary = pd.DataFrame({
@@ -1096,9 +1078,12 @@ with tab6:
                             height=340, template="plotly_white",
                             legend=dict(orientation="h", y=-0.3))
     st.plotly_chart(fig_segs, use_container_width=True)
+    st.success("""**Key Insight:** Residential Mortgages exhibit the highest portfolio stability, while SME and Corporate segments show moderate distributional shifts that remain well below model redevelopment thresholds.
+                """)
+    st.info("""Risk Assessment: All PSI metrics remain below regulatory monitoring thresholds, indicating no material portfolio drift and supporting the continued validity of model calibration, segmentation, and IFRS 9 assumptions.
+            """)
 
-
-# ── Footer ────────────────────────────────────────────────────────────────────
+# Footer 
 st.divider()
 st.markdown(
     f"<div style='text-align:center;color:#888;font-size:0.75rem'>"
