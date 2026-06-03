@@ -3,7 +3,7 @@
 Interactive credit risk dashboard built on AIB Group's public disclosures (2020–2025).
 
 ## Live Demo
-[Click here to open the dashboard](YOUR_STREAMLIT_URL_HERE)
+[Click here to open the dashboard](https://aib-credit-risk-dashboard.streamlit.app/)
 
 ## What It Does
 - **EL Model**: Expected Loss = PD × LGD × EAD per loan segment
@@ -13,7 +13,7 @@ Interactive credit risk dashboard built on AIB Group's public disclosures (2020�
 - **PSI Analysis**: Population Stability Index to detect portfolio drift
 
 ## Data Sources
-- AIB Annual Reports 2019–2024 (aib.ie/investor-relations)
+- AIB Annual Reports 2020–2025 (aib.ie/investor-relations)
 - CSO Ireland (unemployment, GDP, house prices)
 - ECB Data Portal (ECB rates)
 - AIB Pillar 3 Reports (LGD, Stage balances)
